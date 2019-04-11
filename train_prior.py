@@ -12,18 +12,18 @@ from model import RNN
 from utils import Variable, decrease_learning_rate
 rdBase.DisableLog('rdApp.error')
 
-def pretrain(restore_from=None):
+def pretrain(restore_from=None, save_to="data/Prior.ckpt", data="data/mols_filtered.smi", voc_file="data/Voc", batch_size=128):
     """Trains the Prior RNN"""
 
     # Read vocabulary from a file
-    voc = Vocabulary(init_from_file="data/Voc")
+    voc = Vocabulary(init_from_file=voc_file)
 
     # Create a Dataset from a SMILES file
-    moldata = MolData("data/mols_filtered.smi", voc)
-    data = DataLoader(moldata, batch_size=128, shuffle=True, drop_last=True,
+    moldata = MolData(data, voc)
+    data = DataLoader(moldata, batch_size=batch_size, shuffle=True, drop_last=True,
                       collate_fn=MolData.collate_fn)
 
-    Prior = RNN(voc)
+    Prior = RNN(voc, batch_size)
 
     # Can restore from a saved RNN
     if restore_from:
@@ -53,7 +53,7 @@ def pretrain(restore_from=None):
             if step % 500 == 0 and step != 0:
                 decrease_learning_rate(optimizer, decrease_by=0.03)
                 tqdm.write("*" * 50)
-                tqdm.write("Epoch {:3d}   step {:3d}    loss: {:5.2f}\n".format(epoch, step, loss.data[0]))
+                tqdm.write("Epoch {:3d}   step {:3d}    loss: {:5.2f}\n".format(epoch, step, loss.data))
                 seqs, likelihood, _ = Prior.sample(128)
                 valid = 0
                 for i, seq in enumerate(seqs.cpu().numpy()):
@@ -64,10 +64,10 @@ def pretrain(restore_from=None):
                         tqdm.write(smile)
                 tqdm.write("\n{:>4.1f}% valid SMILES".format(100 * valid / len(seqs)))
                 tqdm.write("*" * 50 + "\n")
-                torch.save(Prior.rnn.state_dict(), "data/Prior.ckpt")
+                torch.save(Prior.rnn.state_dict(), save_to)
 
         # Save the Prior
-        torch.save(Prior.rnn.state_dict(), "data/Prior.ckpt")
+        torch.save(Prior.rnn.state_dict(), save_to)
 
 if __name__ == "__main__":
-    pretrain()
+    pretrain(save_to="../models/Prior_chembl_p2x7.ckpt", data="../datasets/filtered/chembl23_training_p2x7.smi", voc_file="../vocabularies/Voc_joined", batch_size=64)

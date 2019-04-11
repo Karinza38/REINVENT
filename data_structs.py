@@ -137,7 +137,11 @@ class Experience(object):
             # Retain highest scores
             self.memory.sort(key = lambda x: x[1], reverse=True)
             self.memory = self.memory[:self.max_size]
-            print("\nBest score in memory: {:.2f}".format(self.memory[0][1]))
+            # Needed because sometimes the printing makes the calculation fail
+            try:
+                print("\nBest score in memory: {:.2f}".format(self.memory[0][1]))
+            except TypeError: 
+                print("\nBest score in memory: %s" % str(self.memory[0][1]))
 
     def sample(self, n):
         """Sample a batch size n of experience"""
@@ -231,7 +235,7 @@ def canonicalize_smiles_from_file(fname):
         print("{} SMILES retrieved".format(len(smiles_list)))
         return smiles_list
 
-def filter_mol(mol, max_heavy_atoms=50, min_heavy_atoms=10, element_list=[6,7,8,9,16,17,35]):
+def filter_mol(mol, max_heavy_atoms=50, min_heavy_atoms=10, element_list=[6,7,8,9,16,17,35,53]):
     """Filters molecules on number of heavy atoms and atom types"""
     if mol is not None:
         num_heavy = min_heavy_atoms<mol.GetNumHeavyAtoms()<max_heavy_atoms
@@ -277,18 +281,18 @@ def filter_file_on_chars(smiles_fname, voc_fname):
         for smiles in valid_smiles:
             f.write(smiles + "\n")
 
-def combine_voc_from_files(fnames):
+def combine_voc_from_files(fnames, out_name):
     """Combine two vocabularies"""
     chars = set()
     for fname in fnames:
         with open(fname, 'r') as f:
             for line in f:
                 chars.add(line.split()[0])
-    with open("_".join(fnames) + '_combined', 'w') as f:
+    with open(out_name, 'w') as f:
         for char in chars:
             f.write(char + "\n")
 
-def construct_vocabulary(smiles_list):
+def construct_vocabulary(smiles_list, file_name='data/Voc'):
     """Returns all the characters present in a SMILES file.
        Uses regex to find characters/tokens of the format '[x]'."""
     add_chars = set()
@@ -304,10 +308,17 @@ def construct_vocabulary(smiles_list):
                 [add_chars.add(unit) for unit in chars]
 
     print("Number of characters: {}".format(len(add_chars)))
-    with open('data/Voc', 'w') as f:
+    with open(file_name, 'w') as f:
         for char in add_chars:
             f.write(char + "\n")
     return add_chars
+
+def get_dataset_name(fname):
+    """ Gets the name of a data set"""
+
+    fname = fname.split("/")[-1]
+    fname = fname.split(".")[0]
+    return fname
 
 if __name__ == "__main__":
     smiles_file = sys.argv[1]

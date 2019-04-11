@@ -3,7 +3,7 @@ from __future__ import print_function, division
 import numpy as np
 from rdkit import Chem
 from rdkit import rdBase
-from rdkit.Chem import AllChem
+from rdkit.Chem import AllChem, Descriptors
 from rdkit import DataStructs
 from sklearn import svm
 import time
@@ -91,6 +91,74 @@ class activity_model():
             nfp[0, nidx] += int(v)
         return nfp
 
+class pIC50_pred():
+    """Scores based on an MFP classifier for activity."""
+
+    kwargs = ['path_to_model', 'path_to_scaler', 'pic50_term']
+
+    def __init__(self):
+
+        self.clf = keras.models.load_model(self.path_to_model)
+        if self.path_to_scaler == '':
+            self.scaler = None
+        else:
+            self.scaler = pickle.load(open(self.path_to_scaler, 'rb'))
+
+        if isinstance(self.pic50_term, type(None)):
+            self.pic50_term = 7
+
+    def __call__(self, smile):
+
+        mol = Chem.MolFromSmiles(smile)
+        if mol:
+            fp = GetMorganFingerprintAsBitVect(mol, radius=3, nBits=2048)
+            fp_arr = np.zeros((1,))
+            DataStructs.ConvertToNumpyArray(fp, fp_arr)
+            if not isinstance(self.scaler, type(None)):
+                scaled_fp = self.scaler.transform(np.expand_dims(fp_arr, 0))
+            else:
+                scaled_fp = np.expand_dims(fp_arr, 0)
+            pic50 = self.clf.predict(scaled_fp)
+            score = np.tanh(pic50-self.pic50_term)
+            return score
+        return -1.0
+
+class pIC50_mw():
+    """Scores based on an MFP classifier for activity and RDKit for Molecular weight."""
+
+    kwargs = ['path_to_model', 'path_to_scaler', 'pic50_term', 'mw_term']
+
+    def __init__(self):
+
+        self.clf = keras.models.load_model(self.path_to_model)
+        if self.path_to_scaler == '':
+            self.scaler = None
+        else:
+            self.scaler = pickle.load(open(self.path_to_scaler, 'rb'))
+
+        if isinstance(self.pic50_term, type(None)):
+            self.pic50_term = 7
+
+        if isinstance(self.mw_term, type(None)):
+            self.mw_term = 395
+
+    def __call__(self, smile):
+
+        mol = Chem.MolFromSmiles(smile)
+        if not isinstance(mol, type(None)):
+            mw = Descriptors.ExactMolWt(mol) - self.mw_term
+            fp = GetMorganFingerprintAsBitVect(mol, radius=3, nBits=2048)
+            fp_arr = np.zeros((1,))
+            DataStructs.ConvertToNumpyArray(fp, fp_arr)
+            if not isinstance(self.scaler, type(None)):
+                scaled_fp = self.scaler.transform(np.expand_dims(fp_arr, 0))
+            else:
+                scaled_fp = np.expand_dims(fp_arr, 0)
+            pic50 = self.clf.predict(scaled_fp)
+            score = 0.5*np.tanh(pic50-7) + 0.5*(2*np.exp(-(0.009*mw)**2)-1)
+            return score
+        return -1.0
+
 class Worker():
     """A worker class for the Multiprocessing functionality. Spawns a subprocess
        that is listening for input SMILES and inserts the score into the given
@@ -175,7 +243,7 @@ class Singleprocessing():
 
 def get_scoring_function(scoring_function, num_processes=None, **kwargs):
     """Function that initializes and returns a scoring function by name"""
-    scoring_function_classes = [no_sulphur, tanimoto, activity_model]
+    scoring_function_classes = [no_sulphur, tanimoto, activity_model, pIC50_pred, pIC50_mw]
     scoring_functions = [f.__name__ for f in scoring_function_classes]
     scoring_function_class = [f for f in scoring_function_classes if f.__name__ == scoring_function][0]
 

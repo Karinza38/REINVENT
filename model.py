@@ -10,10 +10,10 @@ from utils import Variable
 class MultiGRU(nn.Module):
     """ Implements a three layer GRU cell including an embedding layer
        and an output linear layer back to the size of the vocabulary"""
-    def __init__(self, voc_size):
+    def __init__(self, voc_size, batch_size=128):
         super(MultiGRU, self).__init__()
-        self.embedding = nn.Embedding(voc_size, 128)
-        self.gru_1 = nn.GRUCell(128, 512)
+        self.embedding = nn.Embedding(voc_size, batch_size)
+        self.gru_1 = nn.GRUCell(batch_size, 512)
         self.gru_2 = nn.GRUCell(512, 512)
         self.gru_3 = nn.GRUCell(512, 512)
         self.linear = nn.Linear(512, voc_size)
@@ -62,8 +62,8 @@ class RNN():
         entropy = Variable(torch.zeros(batch_size))
         for step in range(seq_length):
             logits, h = self.rnn(x[:, step], h)
-            log_prob = F.log_softmax(logits)
-            prob = F.softmax(logits)
+            log_prob = F.log_softmax(logits, dim=1)
+            prob = F.softmax(logits, dim=1)
             log_probs += NLLLoss(log_prob, target[:, step])
             entropy += -torch.sum((log_prob * prob), 1)
         return log_probs, entropy
@@ -96,9 +96,9 @@ class RNN():
 
         for step in range(max_length):
             logits, h = self.rnn(x, h)
-            prob = F.softmax(logits)
-            log_prob = F.log_softmax(logits)
-            x = torch.multinomial(prob).view(-1)
+            prob = F.softmax(logits, dim=1)
+            log_prob = F.log_softmax(logits, dim=1)
+            x = torch.multinomial(prob, 1).view(-1)
             sequences.append(x.view(-1, 1))
             log_probs +=  NLLLoss(log_prob, x)
             entropy += -torch.sum((log_prob * prob), 1)
