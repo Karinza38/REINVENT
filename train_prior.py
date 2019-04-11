@@ -12,7 +12,7 @@ from model import RNN
 from utils import Variable, decrease_learning_rate
 rdBase.DisableLog('rdApp.error')
 
-def pretrain(restore_from=None, save_to="data/Prior.ckpt", data="data/mols_filtered.smi", voc_file="data/Voc", batch_size=128):
+def pretrain(restore_from=None, save_to="data/Prior.ckpt", data="data/mols_filtered.smi", voc_file="data/Voc", batch_size=128, learning_rate=0.001, n_epochs=5):
     """Trains the Prior RNN"""
 
     # Read vocabulary from a file
@@ -29,8 +29,8 @@ def pretrain(restore_from=None, save_to="data/Prior.ckpt", data="data/mols_filte
     if restore_from:
         Prior.rnn.load_state_dict(torch.load(restore_from))
 
-    optimizer = torch.optim.Adam(Prior.rnn.parameters(), lr = 0.001)
-    for epoch in range(1, 6):
+    optimizer = torch.optim.Adam(Prior.rnn.parameters(), lr = learning_rate)
+    for epoch in range(1, n_epochs+1):
         # When training on a few million compounds, this model converges
         # in a few of epochs or even faster. If model sized is increased
         # its probably a good idea to check loss against an external set of
