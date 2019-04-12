@@ -1,0 +1,44 @@
+============================= test session starts ==============================
+platform linux -- Python 3.6.8, pytest-4.3.1, py-1.8.0, pluggy-0.9.0
+rootdir: /hpc/projects/sa282620/Olivecrona_reinf_RNN/REINVENT/pIC50_predictor, inifile:
+collected 1 item
+
+test_estimator.py .                                                      [100%]
+
+=============================== warnings summary ===============================
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/framework/ops.py:936
+  /home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/framework/ops.py:936: DeprecationWarning: builtin type EagerTensor has no __module__ attribute
+    EagerTensor = c_api.TFE_Py_InitEagerTensor(_EagerTensorBase)
+
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+/home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75
+  /home/sa282620/.conda/envs/olivecrona/lib/python3.6/site-packages/tensorflow/python/util/tf_inspect.py:75: DeprecationWarning: inspect.getargspec() is deprecated since Python 3.0, use inspect.signature() or inspect.getfullargspec()
+    return _inspect.getargspec(target)
+
+-- Docs: https://docs.pytest.org/en/latest/warnings.html
+==================== 1 passed, 28 warnings in 59.45 seconds ====================

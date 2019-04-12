@@ -1,0 +1,1 @@
+from pIC50_predictor import sklearn_predictor
