@@ -159,6 +159,60 @@ class pIC50_mw():
             return score
         return -1.0
 
+class pIC50_synth():
+    """ Scores based on a MFP classifier for activity and a synthetisability score"""
+    
+    kwargs = ['path_to_model', 'path_to_scaler', 'pic50_term']
+
+    def __init__(self):
+        sys.path.append('../scscore/')
+        sys.path.append('../scscore/utils/SA_Score/')
+
+        try:
+            from scscore.standalone_model_numpy import SCScorer
+            from utils.SA_Score import sascorer
+        except ImportError:
+            print("The scscore package could not be found.")
+            exit()
+
+        # Loading the pIC50 model
+        self.clf = keras.models.load_model(self.path_to_model)
+        if self.path_to_scaler == '':
+            self.scaler = None
+        else:
+            self.scaler = pickle.load(open(self.path_to_scaler, 'rb'))
+
+        if isinstance(self.pic50_term, type(None)):
+            self.pic50_term = 7
+   
+        # Loading the Synthetic Complexity scorer
+        scscorer = SCScorer()
+        scscorer.restore()
+
+    def __call__(self, smile):
+
+        mol = Chem.MolFromSmiles(smile)
+        if mol:
+            fp = GetMorganFingerprintAsBitVect(mol, radius=3, nBits=2048)
+            fp_arr = np.zeros((1,))
+            DataStructs.ConvertToNumpyArray(fp, fp_arr)
+            if not isinstance(self.scaler, type(None)):
+                scaled_fp = self.scaler.transform(np.expand_dims(fp_arr, 0))
+            else:
+                scaled_fp = np.expand_dims(fp_arr, 0)
+            pic50 = self.clf.predict(scaled_fp)
+
+            # Obtaining the synthetic complexity score for the smile
+            _, sc_score = scscorer.get_score_from_smi(smile)
+
+            # Obtaining the synthetic accessibility score for the smile
+            sa_score = sascorer.calculateScore(mol)
+
+            # Obtaining the score by averaging the pIC50 score, the sc and sa scores (in the [-1, 1] range)
+            score = (np.tanh(pic50-self.pic50_term)-(sc_score/2.5-1) - (sa_score/2.5-1))/3
+            return score
+        return -1.0
+
 class Worker():
     """A worker class for the Multiprocessing functionality. Spawns a subprocess
        that is listening for input SMILES and inserts the score into the given
@@ -243,7 +297,7 @@ class Singleprocessing():
 
 def get_scoring_function(scoring_function, num_processes=None, **kwargs):
     """Function that initializes and returns a scoring function by name"""
-    scoring_function_classes = [no_sulphur, tanimoto, activity_model, pIC50_pred, pIC50_mw]
+    scoring_function_classes = [no_sulphur, tanimoto, activity_model, pIC50_pred, pIC50_mw, pIC50_synth]
     scoring_functions = [f.__name__ for f in scoring_function_classes]
     scoring_function_class = [f for f in scoring_function_classes if f.__name__ == scoring_function][0]
 
