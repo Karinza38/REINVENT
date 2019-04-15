@@ -62,6 +62,6 @@ class pIC50_predictor(BaseEstimator):
 
         return score
 
-    def save(filename="pic50_model.hdf5"):
+    def save(self, filename="pic50_model.hdf5"):
         if self.is_fitted_:
             self._model.save(filename, overwrite=True)
