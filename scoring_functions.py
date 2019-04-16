@@ -5,13 +5,26 @@ from rdkit import Chem
 from rdkit import rdBase
 from rdkit.Chem import AllChem, Descriptors
 from rdkit import DataStructs
+from rdkit.Chem.AllChem import GetMorganFingerprintAsBitVect
 from sklearn import svm
+import keras
 import time
 import pickle
 import re
 import threading
 import pexpect
+import sys
+import os
 rdBase.DisableLog('rdApp.error')
+
+# Needed for the synthetisability score
+sys.path.append('../../')
+
+try:
+    from scscore.scscore.standalone_model_numpy import SCScorer
+    from scscore.utils.SA_Score import sascorer
+except ImportError:
+    print("The scscore package has not been imported.")
 
 """Scoring function should be a class where some tasks that are shared for every call
    can be reallocated to the __init__, and has a __call__ method which takes a single SMILES of
@@ -165,15 +178,7 @@ class pIC50_synth():
     kwargs = ['path_to_model', 'path_to_scaler', 'pic50_term']
 
     def __init__(self):
-        sys.path.append('../scscore/')
-        sys.path.append('../scscore/utils/SA_Score/')
 
-        try:
-            from scscore.standalone_model_numpy import SCScorer
-            from utils.SA_Score import sascorer
-        except ImportError:
-            print("The scscore package could not be found.")
-            exit()
 
         # Loading the pIC50 model
         self.clf = keras.models.load_model(self.path_to_model)
@@ -186,8 +191,8 @@ class pIC50_synth():
             self.pic50_term = 7
    
         # Loading the Synthetic Complexity scorer
-        scscorer = SCScorer()
-        scscorer.restore()
+        #self.scscorer = SCScorer()
+        #self.scscorer.restore(weight_path="../../scscore/models/full_reaxys_model_1024bool/model.ckpt-10654.as_numpy.json.gz")
 
     def __call__(self, smile):
 
@@ -203,13 +208,13 @@ class pIC50_synth():
             pic50 = self.clf.predict(scaled_fp)
 
             # Obtaining the synthetic complexity score for the smile
-            _, sc_score = scscorer.get_score_from_smi(smile)
+            #_, sc_score = self.scscorer.get_score_from_smi(smile)
 
             # Obtaining the synthetic accessibility score for the smile
             sa_score = sascorer.calculateScore(mol)
 
-            # Obtaining the score by averaging the pIC50 score, the sc and sa scores (in the [-1, 1] range)
-            score = (np.tanh(pic50-self.pic50_term)-(sc_score/2.5-1) - (sa_score/2.5-1))/3
+            # Obtaining the combined score
+            score = np.tanh(pic50-self.pic50_term) - sa_score/5
             return score
         return -1.0
 
