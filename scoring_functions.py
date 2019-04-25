@@ -18,13 +18,7 @@ import os
 rdBase.DisableLog('rdApp.error')
 
 # Needed for the synthetisability score
-sys.path.append('../../')
-
-try:
-    from scscore.scscore.standalone_model_numpy import SCScorer
-    from scscore.utils.SA_Score import sascorer
-except ImportError:
-    print("The scscore package has not been imported.")
+from SA_score import sascorer
 
 """Scoring function should be a class where some tasks that are shared for every call
    can be reallocated to the __init__, and has a __call__ method which takes a single SMILES of
@@ -179,7 +173,6 @@ class pIC50_synth():
 
     def __init__(self):
 
-
         # Loading the pIC50 model
         self.clf = keras.models.load_model(self.path_to_model)
         if self.path_to_scaler == '':
@@ -215,6 +208,47 @@ class pIC50_synth():
 
             # Obtaining the combined score
             score = np.tanh(pic50-self.pic50_term) - sa_score/5
+            return score
+        return -1.0
+
+class pIC50_mw_synth():
+    """Scores based on an MFP classifier for activity and RDKit for Molecular weight and Synthetic Accessibility."""
+
+    kwargs = ['path_to_model', 'path_to_scaler', 'pic50_term', 'mw_term']
+
+    def __init__(self):
+
+        self.clf = keras.models.load_model(self.path_to_model)
+        if self.path_to_scaler == '':
+            self.scaler = None
+        else:
+            self.scaler = pickle.load(open(self.path_to_scaler, 'rb'))
+
+        if isinstance(self.pic50_term, type(None)):
+            self.pic50_term = 7
+
+        if isinstance(self.mw_term, type(None)):
+            self.mw_term = 395
+
+    def __call__(self, smile):
+
+        mol = Chem.MolFromSmiles(smile)
+        if not isinstance(mol, type(None)):
+            mw = Descriptors.ExactMolWt(mol) - self.mw_term
+            fp = GetMorganFingerprintAsBitVect(mol, radius=3, nBits=2048)
+            fp_arr = np.zeros((1,))
+            DataStructs.ConvertToNumpyArray(fp, fp_arr)
+            if not isinstance(self.scaler, type(None)):
+                scaled_fp = self.scaler.transform(np.expand_dims(fp_arr, 0))
+            else:
+                scaled_fp = np.expand_dims(fp_arr, 0)
+            pic50 = self.clf.predict(scaled_fp)
+ 
+            # Obtaining the synthetic accessibility score for the smile
+            sa_score = sascorer.calculateScore(mol)
+
+            # Combining all the scores
+            score = 0.5*np.tanh(pic50-7) + 0.5*(2*np.exp(-(0.009*mw)**2)-1) - sa_score/5
             return score
         return -1.0
 
@@ -302,7 +336,7 @@ class Singleprocessing():
 
 def get_scoring_function(scoring_function, num_processes=None, **kwargs):
     """Function that initializes and returns a scoring function by name"""
-    scoring_function_classes = [no_sulphur, tanimoto, activity_model, pIC50_pred, pIC50_mw, pIC50_synth]
+    scoring_function_classes = [no_sulphur, tanimoto, activity_model, pIC50_pred, pIC50_mw, pIC50_synth, pIC50_mw_synth]
     scoring_functions = [f.__name__ for f in scoring_function_classes]
     scoring_function_class = [f for f in scoring_function_classes if f.__name__ == scoring_function][0]
 
