@@ -133,7 +133,7 @@ class pIC50_pred():
 class pIC50_mw():
     """Scores based on an MFP classifier for activity and RDKit for Molecular weight."""
 
-    kwargs = ['path_to_model', 'path_to_scaler', 'pic50_term', 'mw_term']
+    kwargs = ['path_to_model', 'path_to_scaler', 'pic50_term', 'mw_term', 'std_term']
 
     def __init__(self):
 
@@ -149,6 +149,9 @@ class pIC50_mw():
         if isinstance(self.mw_term, type(None)):
             self.mw_term = 395
 
+        if isinstance(self.std_term, type(None)):
+            self.std_term = 70
+
     def __call__(self, smile):
 
         mol = Chem.MolFromSmiles(smile)
@@ -162,7 +165,7 @@ class pIC50_mw():
             else:
                 scaled_fp = np.expand_dims(fp_arr, 0)
             pic50 = self.clf.predict(scaled_fp)
-            score = 0.5*np.tanh(pic50-7) + 0.5*(2*np.exp(-(0.009*mw)**2)-1)
+            score = 0.5*np.tanh(pic50-7) + 0.5*(2*np.exp((-mw**2)/2*self.std_term**2)-1)
             return score
         return -1.0
 
@@ -206,15 +209,15 @@ class pIC50_synth():
             # Obtaining the synthetic accessibility score for the smile
             sa_score = sascorer.calculateScore(mol)
 
-            # Obtaining the combined score
-            score = np.tanh(pic50-self.pic50_term) - sa_score/5
+            # Obtaining the average of the pIC50 and sa score
+            score = 0.5*np.tanh(pic50-self.pic50_term) + 0.5*((-sa_score+5)*0.5-1)
             return score
         return -1.0
 
 class pIC50_mw_synth():
     """Scores based on an MFP classifier for activity and RDKit for Molecular weight and Synthetic Accessibility."""
 
-    kwargs = ['path_to_model', 'path_to_scaler', 'pic50_term', 'mw_term']
+    kwargs = ['path_to_model', 'path_to_scaler', 'pic50_term', 'mw_term', 'std_term']
 
     def __init__(self):
 
@@ -230,6 +233,8 @@ class pIC50_mw_synth():
         if isinstance(self.mw_term, type(None)):
             self.mw_term = 395
 
+        if isinstance(self.std_term, type(None)):
+            self.std_term = 70
     def __call__(self, smile):
 
         mol = Chem.MolFromSmiles(smile)
@@ -247,8 +252,8 @@ class pIC50_mw_synth():
             # Obtaining the synthetic accessibility score for the smile
             sa_score = sascorer.calculateScore(mol)
 
-            # Combining all the scores
-            score = 0.5*np.tanh(pic50-7) + 0.5*(2*np.exp(-(0.009*mw)**2)-1) - sa_score/5
+            # Averaging all the scores
+            score = (np.tanh(pic50-7) + (2*np.exp((-mw**2)/2*self.std_term**2)-1) + ((-sa_score+5)*0.5-1))/3
             return score
         return -1.0
 
