@@ -165,7 +165,8 @@ class pIC50_mw():
             else:
                 scaled_fp = np.expand_dims(fp_arr, 0)
             pic50 = self.clf.predict(scaled_fp)
-            score = 0.5*np.tanh(pic50-7) + 0.5*(2*np.exp((-mw**2)/2*self.std_term**2)-1)
+            #score = 0.5*np.tanh(pic50-7) + 0.5*(2*np.exp((-mw**2)/2*self.std_term**2)-1)
+            score = 0.5*np.tanh(pic50-7) + 0.5*(2*np.exp(-(0.009*mw)**2)-1)
             return score
         return -1.0
 
@@ -253,7 +254,8 @@ class pIC50_mw_synth():
             sa_score = sascorer.calculateScore(mol)
 
             # Averaging all the scores
-            score = (np.tanh(pic50-7) + (2*np.exp((-mw**2)/2*self.std_term**2)-1) + ((-sa_score+5)*0.5-1))/3
+            #score = (np.tanh(pic50-7) + (2*np.exp((-mw**2)/2*self.std_term**2)-1) + ((-sa_score+5)*0.5-1))/3
+            score = (np.tanh(pic50-7) + (2*np.exp(-(0.009*mw)**2)-1) + ((-sa_score+5)*0.5-1))/3
             return score
         return -1.0
 
