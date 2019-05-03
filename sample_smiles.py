@@ -1,7 +1,5 @@
 import numpy as np
 import torch
-import sys
-sys.path.append("../general_chembl/")
 from model import RNN
 from data_structs import Vocabulary, Experience
 from utils import seq_to_smiles 
