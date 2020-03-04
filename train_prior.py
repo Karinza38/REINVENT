@@ -12,7 +12,7 @@ from model import RNN
 from utils import Variable, decrease_learning_rate
 rdBase.DisableLog('rdApp.error')
 
-def pretrain(restore_from=None, save_to="data/Prior.ckpt", data="data/mols_filtered.smi", voc_file="data/Voc", batch_size=128, learning_rate=0.001, n_epochs=5):
+def pretrain(restore_from=None, save_to="data/Prior.ckpt", data="data/mols_filtered.smi", voc_file="data/Voc", batch_size=128, learning_rate=0.001, n_epochs=5, store_loss_dir=None):
     """Trains the Prior RNN"""
 
     # Read vocabulary from a file
@@ -44,6 +44,13 @@ def pretrain(restore_from=None, save_to="data/Prior.ckpt", data="data/mols_filte
             log_p, _ = Prior.likelihood(seqs)
             loss = - log_p.mean()
 
+            if store_loss_dir is not None:
+                out_f = open("loss.csv", "w")
+            else:
+                out_f = open("{}/loss.csv".format(store_loss_dir.rstrip("/"))
+
+            out_f.write("Step,Loss\n")
+
             # Calculate gradients and take a step
             optimizer.zero_grad()
             loss.backward()
@@ -54,6 +61,7 @@ def pretrain(restore_from=None, save_to="data/Prior.ckpt", data="data/mols_filte
                 decrease_learning_rate(optimizer, decrease_by=0.03)
                 tqdm.write("*" * 50)
                 tqdm.write("Epoch {:3d}   step {:3d}    loss: {:5.2f}\n".format(epoch, step, loss.data))
+                out_f.write("{},{}\n".format(step,loss))
                 seqs, likelihood, _ = Prior.sample(128)
                 valid = 0
                 for i, seq in enumerate(seqs.cpu().numpy()):
@@ -68,6 +76,8 @@ def pretrain(restore_from=None, save_to="data/Prior.ckpt", data="data/mols_filte
 
         # Save the Prior
         torch.save(Prior.rnn.state_dict(), save_to)
+
+    f_out.close()
 
 
 if __name__ == "__main__":
