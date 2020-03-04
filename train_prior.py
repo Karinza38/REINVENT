@@ -69,5 +69,6 @@ def pretrain(restore_from=None, save_to="data/Prior.ckpt", data="data/mols_filte
         # Save the Prior
         torch.save(Prior.rnn.state_dict(), save_to)
 
+
 if __name__ == "__main__":
     pretrain(save_to="../models/Prior_chembl_p2x7.ckpt", data="../datasets/filtered/chembl23_training_p2x7.smi", voc_file="../vocabularies/Voc_joined", batch_size=64)

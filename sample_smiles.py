@@ -11,7 +11,8 @@ def generate_smiles(n_smiles=500, restore_from="data/Prior.ckpt", voc_file="data
     """ 
     This function takes a checkpoint for a trained RNN and the vocabulary file and generates n_smiles new smiles strings.
     """
-    n_smiles = n_smiles - n_smiles%64
+    n = 32
+    n_smiles = n_smiles - n_smiles%n
     print("Generating %i smiles" % n_smiles)
 
     voc = Vocabulary(init_from_file=voc_file)
@@ -23,10 +24,14 @@ def generate_smiles(n_smiles=500, restore_from="data/Prior.ckpt", voc_file="data
         generator.rnn.load_state_dict(torch.load(restore_from, map_location=lambda storage, loc: storage))
     
     all_smiles = []
-    for i in range(int(n_smiles/64)):
-        sequences, _, _ = generator.sample(64)
+    for i in range(int(n_smiles/n)):
+        sequences, _, _ = generator.sample(n)
         smiles = seq_to_smiles(sequences, voc)
         all_smiles += smiles
+
+    # Freeing up memory
+    del generator
+    torch.cuda.empty_cache()
 
     return all_smiles
 
