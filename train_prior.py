@@ -25,9 +25,21 @@ def pretrain(restore_from=None, save_to="data/Prior.ckpt", data="data/mols_filte
 
     Prior = RNN(voc, batch_size)
 
+    # Adding a file to log loss info
+    if store_loss_dir is None:
+        out_f = open("loss.csv", "w")
+    else:
+        out_f = open("{}/loss.csv".format(store_loss_dir.rstrip("/")), "w")
+
+    out_f.write("Step,Loss\n")
+
     # Can restore from a saved RNN
     if restore_from:
         Prior.rnn.load_state_dict(torch.load(restore_from))
+    
+    # For later plotting the loss
+    training_step_counter = 0
+    n_logging = 100
 
     optimizer = torch.optim.Adam(Prior.rnn.parameters(), lr = learning_rate)
     for epoch in range(1, n_epochs+1):
@@ -44,24 +56,21 @@ def pretrain(restore_from=None, save_to="data/Prior.ckpt", data="data/mols_filte
             log_p, _ = Prior.likelihood(seqs)
             loss = - log_p.mean()
 
-            if store_loss_dir is not None:
-                out_f = open("loss.csv", "w")
-            else:
-                out_f = open("{}/loss.csv".format(store_loss_dir.rstrip("/"))
-
-            out_f.write("Step,Loss\n")
-
             # Calculate gradients and take a step
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+
+            # Logging the loss to a file
+            if training_step_counter % n_logging == 0:
+                out_f.write("{},{}\n".format(step,loss))
+                training_step_counter += 1
 
             # Every 500 steps we decrease learning rate and print some information
             if step % 500 == 0 and step != 0:
                 decrease_learning_rate(optimizer, decrease_by=0.03)
                 tqdm.write("*" * 50)
                 tqdm.write("Epoch {:3d}   step {:3d}    loss: {:5.2f}\n".format(epoch, step, loss.data))
-                out_f.write("{},{}\n".format(step,loss))
                 seqs, likelihood, _ = Prior.sample(128)
                 valid = 0
                 for i, seq in enumerate(seqs.cpu().numpy()):
