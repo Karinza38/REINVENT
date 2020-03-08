@@ -64,7 +64,7 @@ def pretrain(restore_from=None, save_to="data/Prior.ckpt", data="data/mols_filte
             # Logging the loss to a file
             if training_step_counter % n_logging == 0:
                 out_f.write("{},{}\n".format(step,loss))
-                training_step_counter += 1
+            training_step_counter += 1
 
             # Every 500 steps we decrease learning rate and print some information
             if step % 500 == 0 and step != 0:
