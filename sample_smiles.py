@@ -7,7 +7,7 @@ from rdkit.Chem import MolFromSmiles
 from rdkit import rdBase
 rdBase.DisableLog('rdApp.error')
 
-def generate_smiles(n_smiles=500, restore_from="data/Prior.ckpt", voc_file="data/Voc", batch_size=128):
+def generate_smiles(n_smiles=500, restore_from="data/Prior.ckpt", voc_file="data/Voc", embedding_size=128):
     """ 
     This function takes a checkpoint for a trained RNN and the vocabulary file and generates n_smiles new smiles strings.
     """
@@ -16,7 +16,7 @@ def generate_smiles(n_smiles=500, restore_from="data/Prior.ckpt", voc_file="data
     print("Generating %i smiles" % n_smiles)
 
     voc = Vocabulary(init_from_file=voc_file)
-    generator = RNN(voc, batch_size)
+    generator = RNN(voc, embedding_size)
 
     if torch.cuda.is_available():
         generator.rnn.load_state_dict(torch.load(restore_from))

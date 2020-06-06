@@ -10,10 +10,10 @@ from utils import Variable
 class MultiGRU(nn.Module):
     """ Implements a three layer GRU cell including an embedding layer
        and an output linear layer back to the size of the vocabulary"""
-    def __init__(self, voc_size, batch_size):
+    def __init__(self, voc_size, embedding_size):
         super(MultiGRU, self).__init__()
-        self.embedding = nn.Embedding(voc_size, batch_size)
-        self.gru_1 = nn.GRUCell(batch_size, 512)
+        self.embedding = nn.Embedding(voc_size, embedding_size)
+        self.gru_1 = nn.GRUCell(embedding_size, 512)
         self.gru_2 = nn.GRUCell(512, 512)
         self.gru_3 = nn.GRUCell(512, 512)
         self.linear = nn.Linear(512, voc_size)
@@ -34,8 +34,8 @@ class MultiGRU(nn.Module):
 class RNN():
     """Implements the Prior and Agent RNN. Needs a Vocabulary instance in
     order to determine size of the vocabulary and index of the END token"""
-    def __init__(self, voc, batch_size=128):
-        self.rnn = MultiGRU(voc.vocab_size, batch_size)
+    def __init__(self, voc, embedding_size=128):
+        self.rnn = MultiGRU(voc.vocab_size, embedding_size)
         if torch.cuda.is_available():
             self.rnn.cuda()
         self.voc = voc

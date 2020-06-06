@@ -22,14 +22,15 @@ def train_agent(restore_prior_from='data/Prior.ckpt',
                 save_dir=None, learning_rate=0.0005,
                 batch_size=64, n_steps=3000,
                 num_processes=0, sigma=60,
-                experience_replay=0):
+                experience_replay=0, embedding_size=32,
+                ):
 
     voc = Vocabulary(init_from_file=voc_file)
 
     start_time = time.time()
 
-    Prior = RNN(voc, batch_size)
-    Agent = RNN(voc, batch_size)
+    Prior = RNN(voc, embedding_size)
+    Agent = RNN(voc, embedding_size)
 
     #logger = VizardLog('data/logs')
 

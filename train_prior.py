@@ -12,7 +12,7 @@ from model import RNN
 from utils import Variable, decrease_learning_rate
 rdBase.DisableLog('rdApp.error')
 
-def pretrain(restore_from=None, save_to="data/Prior.ckpt", data="data/mols_filtered.smi", voc_file="data/Voc", batch_size=128, learning_rate=0.001, n_epochs=5, store_loss_dir=None):
+def pretrain(restore_from=None, save_to="data/Prior.ckpt", data="data/mols_filtered.smi", voc_file="data/Voc", batch_size=128, learning_rate=0.001, n_epochs=5, store_loss_dir=None, embedding_size=32):
     """Trains the Prior RNN"""
 
     # Read vocabulary from a file
@@ -23,7 +23,7 @@ def pretrain(restore_from=None, save_to="data/Prior.ckpt", data="data/mols_filte
     data = DataLoader(moldata, batch_size=batch_size, shuffle=True, drop_last=True,
                       collate_fn=MolData.collate_fn)
 
-    Prior = RNN(voc, batch_size)
+    Prior = RNN(voc, embedding_size)
 
     # Adding a file to log loss info
     if store_loss_dir is None:
